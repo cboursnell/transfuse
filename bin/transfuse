@@ -1,0 +1,47 @@
+#!/usr/bin/env ruby
+
+require 'trollop'
+
+ARGV[0] = "--help" if ARGV.length() == 0
+
+
+opts = Trollop::options do
+  version Transfuse::VERSION::STRING.dup
+  banner <<-EOS
+
+  Transfuse v#{Transrate::VERSION::STRING.dup}
+  by Richard Smith-Unna <rds45@cam.ac.uk> and
+     Chris Boursnell <cmb211@cam.ac.uk>
+
+  DESCRIPTION:
+  Merge multiple assemblies.
+
+  USAGE:
+  transfuse <options>
+
+  OPTIONS:
+
+  EOS
+  opt :assembly, "assembly file(s) in FASTA format, comma-separated",
+      :type => String
+  opt :left, "left reads file in FASTQ format",
+      :type => String
+  opt :right, "right reads file in FASTQ format",
+      :type => String
+end
+
+transfuse = Transfuse.new
+
+# concatenate assemblies into one fasta file
+cat = transfuse.concatenate opts.assembly
+# run transrate on new file with left and right reads
+bam = transfuse.transrate(cat, left, right)
+# keep the final output bam file from transrate
+
+# run corset on this bam file
+output = transfuse.corset(bam)
+# for each cluster pull out sequences and get the score for each
+
+# in each sub cluster throw away the sequence with the lowest transrate score
+
+# profit!
