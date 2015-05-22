@@ -55,13 +55,13 @@ module Transfuse
 
     def filter files, scores
       filtered_files = []
-      files.each do |file|
+      files.each_with_index do |file, index|
         new_filename = "#{File.basename(file, File.extname(file))}_filtered.fa"
         File.open(new_filename, "wb") do |out|
           Bio::FastaFormat.open(file).each do |entry|
             contig_name = entry.entry_id
             if scores.key?(contig_name) and scores[contig_name] > 0.01
-              out.write ">#{contig_name}\n"
+              out.write ">#{index}_#{contig_name}\n"
               out.write "#{entry.seq}\n"
             end
           end
@@ -72,9 +72,16 @@ module Transfuse
     end
 
     def transrate files, left, right
-      rate = Transrate.new @threads
-      score_files = rate.run files, left, right
-      return load_scores(score_files)
+      scores = {}
+      files.each do |fasta|
+        assembly = Transrate::Assembly.new(fasta)
+        transrater = Transrate::Transrater.new(assembly, nil, threads:@threads)
+        transrater.read_metrics(left.join(','), right.join(','))
+        assembly.each do |name, contig|
+          scores[name] = contig.score
+        end
+      end
+      return scores
     end
 
     def select_contigs clusters, scores
