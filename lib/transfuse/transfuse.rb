@@ -1,6 +1,7 @@
 module Transfuse
 
   require 'csv'
+  require 'transrate'
 
   class Transfuse
 
