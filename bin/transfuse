@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 
 require 'trollop'
+require 'transfuse'
 
 ARGV[0] = "--help" if ARGV.length() == 0
 
@@ -34,18 +35,12 @@ opts = Trollop::options do
   opt :threads, "number of threads", :type => :int, :default => 1
 end
 
-transfuse = Transfuse.new opts.threads
+transfuse = Transfuse::Transfuse.new opts.threads
 
 assembly_files = transfuse.check_files opts.assembly
 score_files = transfuse.check_files opts.score if opts.score
 left = transfuse.check_files opts.left if opts.left
 right = transfuse.check_files opts.right if opts.right
-
-# concatenate assemblies into one fasta file
-cat = transfuse.concatenate assembly_files
-
-# cluster using vsearch or maybe cd-hit-est
-clusters = transfuse.cluster cat
 
 if opts.scores
 # load the scores from the comma separated list of files
@@ -57,6 +52,14 @@ else
   msg << "left and right fastq files to generate scores using transrate"
   abort msg
 end
+
+assembly_files = transfuse.filter assembly_files, scores
+
+# concatenate assemblies into one fasta file
+cat = transfuse.concatenate assembly_files
+
+# cluster using vsearch or maybe cd-hit-est
+clusters = transfuse.cluster cat
 
 # pull out contigs from each cluster based on the scores
 best = transfuse.select_contigs clusters, scores, cat

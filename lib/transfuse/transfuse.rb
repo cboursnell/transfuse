@@ -53,6 +53,24 @@ module Transfuse
       return scores
     end
 
+    def filter files, scores
+      filtered_files = []
+      files.each do |file|
+        new_filename = "#{File.basename(file, File.extname(file))}_filtered.fa"
+        File.open(new_filename, "wb") do |out|
+          Bio::FastaFormat.open(file).each do |entry|
+            contig_name = entry.entry_id
+            if scores.key?(contig_name) and scores[contig_name] > 0.01
+              out.write ">#{contig_name}\n"
+              out.write "#{entry.seq}\n"
+            end
+          end
+        end
+        filtered_files << File.expand_path(new_filename)
+      end
+      return filtered_files
+    end
+
     def transrate files, left, right
       rate = Transrate.new @threads
       score_files = rate.run files, left, right

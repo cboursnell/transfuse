@@ -36,21 +36,34 @@ class TestTransfuse < Test::Unit::TestCase
       end
     end
 
-    # should "cluster fasta file" do
-    #   Dir.mktmpdir do |tmpdir|
-    #     Dir.chdir(tmpdir) do
-    #       file = File.join(File.dirname(__FILE__), 'data', 'assembly1.fasta')
-    #       hash = @fuser.cluster file
-    #       assert_equal 250, hash.size, "output size"
-    #     end
-    #   end
-    # end
+    should "cluster fasta file" do
+      Dir.mktmpdir do |tmpdir|
+        Dir.chdir(tmpdir) do
+          file = File.join(File.dirname(__FILE__), 'data', 'assembly1.fasta')
+          hash = @fuser.cluster file
+          assert_equal 250, hash.size, "output size"
+        end
+      end
+    end
 
     should "load scores from transrate output" do
       files = []
       files << File.join(File.dirname(__FILE__), 'data', 'contig_scores1.csv')
       hash = @fuser.load_scores files
       assert_equal 99, hash.size
+    end
+
+    should "filter contigs" do
+      files = []
+      scores = {}
+      files << File.join(File.dirname(__FILE__), 'data', 'assembly1.fasta')
+      scores["soap_contig173359"] = 1
+      scores["soap_contig38533"] = 0.5
+      scores["idba_contig44716"] = 0
+      new_list = @fuser.filter files, scores
+      assert_equal 1, new_list.length
+      cmd = "grep -c \">\" #{new_list.first}"
+      assert_equal 2, `#{cmd}`.chomp.split.first.to_i, "contigs"
     end
 
     should "run transrate on assembly files with reads" do
