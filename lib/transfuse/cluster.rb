@@ -7,7 +7,7 @@ module Transfuse
 
     def initialize threads
       @vsearch = Which::which('vsearch').first
-      raise RuntimeError unless @vsearch
+      raise "vsearch was not in the PATH - please install it" unless @vsearch
       @id = "1.00"
       @threads = threads
     end
