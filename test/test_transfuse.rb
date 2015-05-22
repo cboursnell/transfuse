@@ -31,7 +31,7 @@ class TestTransfuse < Test::Unit::TestCase
           output = @fuser.concatenate list
           assert File.exist?(output)
           lines = `wc -l #{output}`
-          assert_equal 1000, lines.split(/\s+/)[0].to_i
+          assert_equal 1000, lines.chomp.split.first.to_i
         end
       end
     end

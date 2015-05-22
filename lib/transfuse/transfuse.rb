@@ -30,7 +30,7 @@ module Transfuse
       cmd << " > #{catted_fasta}"
       catter = Cmd.new cmd
       catter.run catted_fasta
-      return catted_fasta
+      return File.expand_path(catted_fasta)
     end
 
     def cluster file
