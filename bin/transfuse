@@ -62,7 +62,7 @@ cat = transfuse.concatenate assembly_files
 clusters = transfuse.cluster cat
 
 # pull out contigs from each cluster based on the scores
-best = transfuse.select_contigs clusters, scores, cat
+best = transfuse.select_contigs clusters, scores
 
 transfuse.output_contigs best, cat, opts.output
 
