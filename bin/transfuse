@@ -25,10 +25,10 @@ opts = Trollop::options do
       :type => String, :required => true
   opt :scores, "transrate contig score output files, comma-separated",
       :type => String
-  # opt :left, "left reads file in FASTQ format",
-      # :type => String
-  # opt :right, "right reads file in FASTQ format",
-      # :type => String
+  opt :left, "left reads file in FASTQ format",
+      :type => String
+  opt :right, "right reads file in FASTQ format",
+      :type => String
   opt :output, "write merged assembly to file",
       :type => String, :required => :true
   opt :threads, "number of threads", :type => :int, :default => 1
@@ -37,7 +37,9 @@ end
 transfuse = Transfuse.new opts.threads
 
 assembly_files = transfuse.check_files opts.assembly
-score_files = transfuse.check_files opts.score
+score_files = transfuse.check_files opts.score if opts.score
+left = transfuse.check_files opts.left if opts.left
+right = transfuse.check_files opts.right if opts.right
 
 # concatenate assemblies into one fasta file
 cat = transfuse.concatenate assembly_files
@@ -45,11 +47,19 @@ cat = transfuse.concatenate assembly_files
 # cluster using vsearch or maybe cd-hit-est
 clusters = transfuse.cluster cat
 
+if opts.scores
 # load the scores from the comma separated list of files
-scores = transfuse.load_scores score_files
+  scores = transfuse.load_scores score_files
+elsif opts.left and opts.right
+  scores = transfuse.transrate assembly_files, left, right
+else
+  msg = "Please provide either transrate contig scores as csv files or\n"
+  msg << "left and right fastq files to generate scores using transrate"
+  abort msg
+end
 
 # pull out contigs from each cluster based on the scores
 best = transfuse.select_contigs clusters, scores, cat
 
-transfuse.output_contigs best, cat
+transfuse.output_contigs best, cat, opts.output
 

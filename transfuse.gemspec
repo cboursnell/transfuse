@@ -4,7 +4,7 @@ require File.expand_path('../lib/transfuse/version', __FILE__)
 Gem::Specification.new do |gem|
   gem.name        = 'transfuse'
   gem.version     = Transfuse::VERSION::STRING.dup
-  gem.date        = '2014-12-18'
+  gem.date        = '2015-05-22'
   gem.summary     = "Merge assemblies"
   gem.description = "See summary"
   gem.authors     = ["Richard Smith-Unna", "Chris Boursnell"]

@@ -53,6 +53,12 @@ module Transfuse
       return scores
     end
 
+    def transrate files, left, right
+      rate = Transrate.new @threads
+      score_files = rate.run files, left, right
+      return load_scores(score_files)
+    end
+
     def select_contigs clusters, scores
       best = []
       clusters.each do |cluster_id, list|

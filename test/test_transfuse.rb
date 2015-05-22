@@ -53,6 +53,21 @@ class TestTransfuse < Test::Unit::TestCase
       assert_equal 99, hash.size
     end
 
+    should "run transrate on assembly files with reads" do
+      files = []
+      left = []
+      right = []
+      files << File.join(File.dirname(__FILE__), 'data', 'assembly3.fasta')
+      left << File.join(File.dirname(__FILE__), 'data', 'left.fq')
+      right << File.join(File.dirname(__FILE__), 'data', 'right.fq')
+      Dir.mktmpdir do |tmpdir|
+        Dir.chdir(tmpdir) do
+          scores = @fuser.transrate files, left, right
+          assert_equal 100, scores.size, "scores size"
+        end
+      end
+    end
+
     should "select contigs" do
       clusters = {"0" => ["contig1", "contig2"], "1" => ["contig3", "contig4"]}
       scores = { "contig1" => 0.2,
