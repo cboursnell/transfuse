@@ -25,10 +25,12 @@ module Transfuse
     end
 
     def concatenate assemblies
-      catted_fasta = "all"
+      catted_fasta = "all-"
+      fasta = []
       assemblies.each do |name|
-        catted_fasta << File.basename(name, File.extname(name))[0..5]
+        fasta << File.basename(name, File.extname(name))[0..5]
       end
+      catted_fasta << fasta.join("-")
       catted_fasta << ".fa"
       puts "concatenating assemblies into #{catted_fasta}" if @verbose
       cmd = "cat "
@@ -43,7 +45,7 @@ module Transfuse
 
     def cluster file
       puts "clustering #{file}" if @verbose
-      cluster = Cluster.new @threads
+      cluster = Cluster.new @threads, @verbose
       return cluster.run file
     end
 
