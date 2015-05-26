@@ -18,8 +18,12 @@ class TestCluster < Test::Unit::TestCase
       assert @cluster
     end
 
-    should 'generate command' do
-      output = @cluster.generate_command "assembly1.fasta", "output.txt"
+    should 'generate cd-hit command' do
+      cmd = @cluster.generate_command "assembly1.fasta", "output.fa"
+    end
+
+    should 'generate vsearch command' do
+      output = @cluster.generate_vsearch_command "assembly1.fasta", "output.txt"
       a = "vsearch --cluster_fast assembly1.fasta --id 1.00 "
       a << "--strand both --uc output.txt --threads 4"
       b = output.split(" ")

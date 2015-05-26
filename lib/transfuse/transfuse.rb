@@ -36,8 +36,7 @@ module Transfuse
 
     def cluster file
       cluster = Cluster.new @threads
-      output = cluster.run file
-      return cluster.parse_output(output)
+      return cluster.run file
     end
 
     def load_scores files
