@@ -5,8 +5,9 @@ module Transfuse
 
   class Transfuse
 
-    def initialize threads
+    def initialize threads, verbose
       @threads = threads
+      @verbose = verbose
     end
 
     def check_files string
@@ -14,6 +15,7 @@ module Transfuse
       string.split(",").each do |file|
         file = File.expand_path(file)
         if File.exist?(file)
+          puts "#{file} exists" if @verbose
           list << file
         else
           abort "#{file} not found"
@@ -23,7 +25,12 @@ module Transfuse
     end
 
     def concatenate assemblies
-      catted_fasta = "all.fa"
+      catted_fasta = "all"
+      assemblies.each do |name|
+        catted_fasta << File.basename(name, File.extname(name))[0..5]
+      end
+      catted_fasta << ".fa"
+      puts "concatenating assemblies into #{catted_fasta}" if @verbose
       cmd = "cat "
       assemblies.each do |file|
         cmd << " #{file} "
@@ -35,6 +42,7 @@ module Transfuse
     end
 
     def cluster file
+      puts "clustering #{file}" if @verbose
       cluster = Cluster.new @threads
       return cluster.run file
     end
@@ -74,6 +82,7 @@ module Transfuse
     def transrate files, left, right
       scores = {}
       files.each do |fasta|
+        puts "transrate on #{fasta}" if @verbose
         assembly = Transrate::Assembly.new(fasta)
         transrater = Transrate::Transrater.new(assembly, nil, threads:@threads)
         transrater.read_metrics(left.join(','), right.join(','))
@@ -85,6 +94,7 @@ module Transfuse
     end
 
     def select_contigs clusters, scores
+      puts "selecting contigs" if @verbose
       best = []
       clusters.each do |cluster_id, list|
         best_score = 0
@@ -101,6 +111,7 @@ module Transfuse
     end
 
     def output_contigs best, fasta, output
+      puts "writing contigs" if @verbose
       # read in catted fasta sequences
       sequences = {}
       Bio::FastaFormat.open(fasta).each do |entry|

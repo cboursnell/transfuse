@@ -5,17 +5,19 @@ module Transfuse
 
   class Cluster
 
-    def initialize threads
+    def initialize threads, verbose
       @cdhit = Which::which('cd-hit-est').first
       raise "cd-hit-est was not in the PATH - please install it" unless @cdhit
       @vsearch = Which::which('vsearch').first
       raise "vsearch was not in the PATH - please install it" unless @vsearch
       @id = "1.00"
       @threads = threads
+      @verbose = verbose
     end
 
     def run fasta
-      if cd_hit
+      use_cd_hit = true
+      if use_cd_hit
         output = cd_hit fasta
         return parse_output output
       else
@@ -25,6 +27,7 @@ module Transfuse
     end
 
     def cd_hit fasta
+      puts "running cd-hit-est" if @verbose
       output = "#{File.basename(fasta, File.extname(fasta))}_cdhit.fa"
       cdhit_cmd = generate_command fasta, output
       cluster = Cmd.new cdhit_cmd
@@ -33,6 +36,7 @@ module Transfuse
     end
 
     def vsearch fasta
+      puts "running vsearch" if @verbose
       cluster_output = "clusters.txt"
       vsearch_cmd = generate_command fasta, cluster_output
       cluster = Cmd.new vsearch_cmd
@@ -65,6 +69,7 @@ module Transfuse
     end
 
     def parse_output cluster_output
+      puts "parsing cd-hit output #{cluster_output}" if @verbose
       cluster_id = 0
       clusters = {}
       File.open(cluster_output).each_line do |line|

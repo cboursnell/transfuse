@@ -33,9 +33,10 @@ opts = Trollop::options do
   opt :output, "write merged assembly to file",
       :type => String, :required => :true
   opt :threads, "number of threads", :type => :int, :default => 1
+  opt :verbose, "be verbose"
 end
 
-transfuse = Transfuse::Transfuse.new opts.threads
+transfuse = Transfuse::Transfuse.new opts.threads, opts.verbose
 
 assembly_files = transfuse.check_files opts.assembly
 score_files = transfuse.check_files opts.score if opts.score
