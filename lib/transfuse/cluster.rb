@@ -29,7 +29,8 @@ module Transfuse
     def cd_hit fasta
       puts "running cd-hit-est" if @verbose
       output = "#{File.basename(fasta, File.extname(fasta))}_cdhit.fa"
-      cdhit_cmd = generate_command fasta, output
+      cdhit_cmd = generate_cdhit_command fasta, output
+      puts cdhit_cmd if @verbose
       cluster = Cmd.new cdhit_cmd
       cluster.run output
       return "#{output}.clstr"
@@ -38,7 +39,7 @@ module Transfuse
     def vsearch fasta
       puts "running vsearch" if @verbose
       cluster_output = "clusters.txt"
-      vsearch_cmd = generate_command fasta, cluster_output
+      vsearch_cmd = generate_vsearch_command fasta, cluster_output
       cluster = Cmd.new vsearch_cmd
       cluster.run cluster_output
       return cluster_output
@@ -47,7 +48,7 @@ module Transfuse
     def generate_cdhit_command fasta, out
       #cd-hit-est -i all.fa  -o cd-hit-clusters.txt -c 0.99999 -T 24 -d 100
       cmd = "#{@cdhit}"
-      cmd << " #{fasta}"
+      cmd << " -i #{fasta}"
       cmd << " -o #{out}"
       cmd << " -c #{@id}" # similarity = number of identical bases /
                           #              length of shorter sequences
@@ -78,8 +79,8 @@ module Transfuse
         elsif line =~ /[0-9]+\s+.+nt,\ >(.+)\.\.\.\sat\s[+\-]\/([0-9\.]+)\%/
           contig_name = $1
           id = $2.to_f
-          cluster[cluster_id] ||= []
-          cluster[cluster_id] << contig_name
+          clusters[cluster_id] ||= []
+          clusters[cluster_id] << contig_name
         end
       end
       return clusters

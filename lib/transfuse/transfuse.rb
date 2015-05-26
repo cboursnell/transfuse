@@ -68,28 +68,48 @@ module Transfuse
       files.each_with_index do |file, index|
         new_filename = "#{File.basename(file, File.extname(file))}_filtered.fa"
         File.open(new_filename, "wb") do |out|
+          puts "opening #{file}..."
           Bio::FastaFormat.open(file).each do |entry|
             contig_name = entry.entry_id
+            contig_name = "contig#{index}_#{contig_name}"
             if scores.key?(contig_name) and scores[contig_name] > 0.01
-              out.write ">#{index}_#{contig_name}\n"
+              out.write ">#{contig_name}\n"
               out.write "#{entry.seq}\n"
+            elsif !scores.key?(contig_name)
+              abort "Can't find '#{contig_name}' in scores"
             end
           end
         end
-        filtered_files << File.expand_path(new_filename)
+      filtered_files << File.expand_path(new_filename)
       end
       return filtered_files
     end
 
+
     def transrate files, left, right
       scores = {}
-      files.each do |fasta|
-        puts "transrate on #{fasta}" if @verbose
-        assembly = Transrate::Assembly.new(fasta)
-        transrater = Transrate::Transrater.new(assembly, nil, threads:@threads)
-        transrater.read_metrics(left.join(','), right.join(','))
-        assembly.each do |name, contig|
-          scores[name] = contig.score
+      scores_file = "scores.csv"
+      if File.exist?(scores_file)
+        puts "loading scores from file" if @verbose
+        File.open(scores_file).each do |line|
+          name, score = line.chomp.split("\t")
+          scores[name] = score.to_f
+        end
+      else
+        files.each_with_index do |fasta, index|
+          puts "transrate on #{fasta}" if @verbose
+          assembly = Transrate::Assembly.new(fasta)
+          transrater = Transrate::Transrater.new(assembly, nil, threads:@threads)
+          transrater.read_metrics(left.join(','), right.join(','))
+          assembly.each do |name, contig|
+            name = "contig#{index}_#{name}"
+            scores[name] = contig.score
+          end
+        end
+        File.open(scores_file, "wb") do |out|
+          scores.each do |name, score|
+            out.write "#{name}\t#{score}\n"
+          end
         end
       end
       return scores
@@ -102,6 +122,9 @@ module Transfuse
         best_score = 0
         best_contig = ""
         list.each do |contig_name|
+          unless scores[contig_name]
+            abort "can't find #{contig_name} in scores hash\n"
+          end
           if scores[contig_name] > best_score
             best_score = scores[contig_name]
             best_contig = contig_name

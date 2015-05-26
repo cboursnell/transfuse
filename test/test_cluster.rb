@@ -19,7 +19,7 @@ class TestCluster < Test::Unit::TestCase
     end
 
     should 'generate cd-hit command' do
-      cmd = @cluster.generate_command "assembly1.fasta", "output.fa"
+      cmd = @cluster.generate_cdhit_command "assembly1.fasta", "output.fa"
     end
 
     should 'generate vsearch command' do
