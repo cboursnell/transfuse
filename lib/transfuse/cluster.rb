@@ -16,7 +16,7 @@ module Transfuse
     end
 
     def run fasta
-      use_cd_hit = true
+      use_cd_hit = false
       if use_cd_hit
         output = cd_hit fasta
         return parse_output output
@@ -38,7 +38,7 @@ module Transfuse
 
     def vsearch fasta
       puts "running vsearch" if @verbose
-      cluster_output = "clusters.txt"
+      cluster_output = "#{fasta}.clust"
       vsearch_cmd = generate_vsearch_command fasta, cluster_output
       cluster = Cmd.new vsearch_cmd
       cluster.run cluster_output
@@ -53,7 +53,7 @@ module Transfuse
       cmd << " -c #{@id}" # similarity = number of identical bases /
                           #              length of shorter sequences
       cmd << " -T #{@threads}"
-      cmd << " -n 10" # word length
+      cmd << " -n 10" # word length - maybe increase??
       cmd << " -d 100" # output name width
       cmd << " -g 1" # slower but more accurate mode
       cmd << " -M 8000" # increase memory
@@ -63,6 +63,8 @@ module Transfuse
       vsearch = "#{@vsearch}"
       vsearch << " --cluster_fast #{fasta}"
       vsearch << " --id #{@id}"
+      vsearch << " --iddef 0" # cd-hit definition of sequence id
+      vsearch << " --qmask none" # no masking
       vsearch << " --strand both"
       vsearch << " --uc #{out}"
       vsearch << " --threads #{@threads}"
@@ -76,11 +78,17 @@ module Transfuse
       File.open(cluster_output).each_line do |line|
         if line =~ />Cluster\ ([0-9]+)/
           cluster_id = $1.to_i
-        elsif line =~ /[0-9]+\s+.+nt,\ >(.+)\.\.\.\sat\s[+\-]\/([0-9\.]+)\%/
+        elsif line =~ /[0-9]+\s+.+nt,\ >(.+)\.\.\.\sat\s([+\-])\/([0-9\.]+)\%/
           contig_name = $1
-          id = $2.to_f
+          strand = $2
+          id = $3.to_f
           clusters[cluster_id] ||= []
-          clusters[cluster_id] << contig_name
+          clusters[cluster_id] << { :name => contig_name, :strand => strand }
+        elsif line =~ /[0-9]+\s+[0-9]+nt,\s>(.+)\.\.\.\s\*/
+          contig_name = $1
+          strand = "+"
+          clusters[cluster_id] ||= []
+          clusters[cluster_id] << { :name => contig_name, :strand => strand }
         end
       end
       return clusters

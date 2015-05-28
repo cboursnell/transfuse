@@ -1,3 +1,9 @@
+class String
+  def revcomp
+    self.tr("ACGT", "TGCA").reverse
+  end
+end
+
 module Transfuse
 
   require 'csv'
@@ -8,6 +14,8 @@ module Transfuse
     def initialize threads, verbose
       @threads = threads
       @verbose = verbose
+      @clustalo = Which::which('clustalo').first
+      raise "clustalo was not in the PATH - please install it" unless @clustalo
     end
 
     def check_files string
@@ -49,6 +57,38 @@ module Transfuse
       return cluster.run file
     end
 
+    def load_fasta fasta
+      @sequences = {}
+      Bio::FastaFormat.open(fasta).each do |entry|
+        @sequences[entry.entry_id] = entry.seq.to_s
+      end
+    end
+
+    def sequence_alignment clusters
+      clusters.each do |id, list| # threach
+        if list.size > 5
+          seq = ""
+          list.each do |hash|
+            seq << ">#{hash[:name]}\n"
+            if hash[:strand] == "+"
+              seq << "#{@sequences[hash[:name]]}\n"
+            elsif hash[:strand] == "-"
+              seq << "#{@sequences[hash[:name]].revcomp}\n"
+            else
+              abort "Unknown strand #{hash[:strand]}"
+            end
+          end
+          cmd = "echo -e \"#{seq}\" | #{@clustalo} -i - --outfmt fa "
+          cmd << "--output-order tree-order"
+          align = Cmd.new cmd
+          align.run
+          File.open("cluster#{id}.fa", "wb") do |out|
+            out.write align.stdout
+          end
+        end
+      end
+    end
+
     def load_scores files
       scores = {}
       files.each do |file|
@@ -67,20 +107,22 @@ module Transfuse
       filtered_files = []
       files.each_with_index do |file, index|
         new_filename = "#{File.basename(file, File.extname(file))}_filtered.fa"
-        File.open(new_filename, "wb") do |out|
-          puts "opening #{file}..."
-          Bio::FastaFormat.open(file).each do |entry|
-            contig_name = entry.entry_id
-            contig_name = "contig#{index}_#{contig_name}"
-            if scores.key?(contig_name) and scores[contig_name] > 0.01
-              out.write ">#{contig_name}\n"
-              out.write "#{entry.seq}\n"
-            elsif !scores.key?(contig_name)
-              abort "Can't find '#{contig_name}' in scores"
+        unless File.exist?(new_filename)
+          File.open(new_filename, "wb") do |out|
+            puts "opening #{file}..."
+            Bio::FastaFormat.open(file).each do |entry|
+              contig_name = entry.entry_id
+              contig_name = "contig#{index}_#{contig_name}"
+              if scores.key?(contig_name) and scores[contig_name] > 0.01
+                out.write ">#{contig_name}\n"
+                out.write "#{entry.seq}\n"
+              elsif !scores.key?(contig_name)
+                abort "Can't find '#{contig_name}' in scores"
+              end
             end
           end
         end
-      filtered_files << File.expand_path(new_filename)
+        filtered_files << File.expand_path(new_filename)
       end
       return filtered_files
     end
