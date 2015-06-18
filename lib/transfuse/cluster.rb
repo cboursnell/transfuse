@@ -96,13 +96,35 @@ module Transfuse
 
     def parse_vsearch_output cluster_output
       clusters = {}
+      second = 0
       File.open(cluster_output).each_line do |line|
         if line.start_with?("S") or line.start_with?("H")
           cols = line.chomp.split("\t")
-          cluster = cols[1].to_i
+          cluster = cols[1]
+          len = cols[2].to_i
+          cigar = cols[7]
+          strand = cols[4]
+          strand = "+" if strand == "*"
           contig_name = cols[8]
+          if cigar != "*"
+            cigar = cigar.split(/[IDM]/).zip(cigar.scan(/[IDM]/))
+            match = 0
+            deletions = 0
+            cigar.each do |item|
+              if item[1]=="M"
+                match += item[0].to_i
+              end
+              if item[1]=="D"
+                deletions += item[0].to_i
+              end
+            end
+            if match < deletions # this seq is likely to mess up the MSA
+              cluster = "#{cluster}.#{second}"
+              second += 1
+            end
+          end
           clusters[cluster] ||= []
-          clusters[cluster] << contig_name
+          clusters[cluster] << { :name => contig_name, :strand => strand }
         end
       end
       return clusters

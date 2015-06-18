@@ -18,7 +18,7 @@ module Transfuse
 
     def run file=nil
       unless file.nil?
-        if File.exist?(file)
+        if File.exist?(file) and File.stat(file).size > 0
           @stdout = ""
           @stderr = ""
           @status = Status.new

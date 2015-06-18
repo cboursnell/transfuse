@@ -8,6 +8,7 @@ module Transfuse
 
   require 'csv'
   require 'transrate'
+  require 'threach'
 
   class Transfuse
 
@@ -51,42 +52,125 @@ module Transfuse
       return File.expand_path(catted_fasta)
     end
 
-    def cluster file
-      puts "clustering #{file}" if @verbose
-      cluster = Cluster.new @threads, @verbose
-      return cluster.run file
-    end
-
     def load_fasta fasta
+      puts "loading fasta sequence #{fasta}" if @verbose
       @sequences = {}
       Bio::FastaFormat.open(fasta).each do |entry|
         @sequences[entry.entry_id] = entry.seq.to_s
       end
     end
 
+    def cluster file
+      puts "clustering #{file}" if @verbose
+      cluster = Cluster.new @threads, @verbose
+      return cluster.run file
+    end
+
     def sequence_alignment clusters
-      clusters.each do |id, list| # threach
-        if list.size > 5
-          seq = ""
-          list.each do |hash|
-            seq << ">#{hash[:name]}\n"
-            if hash[:strand] == "+"
-              seq << "#{@sequences[hash[:name]]}\n"
-            elsif hash[:strand] == "-"
-              seq << "#{@sequences[hash[:name]].revcomp}\n"
-            else
-              abort "Unknown strand #{hash[:strand]}"
+      output_files = {}
+      clusters.threach(@threads) do |id, list| # threach
+        output_file = "consensus_output_#{Thread.current.object_id}.fa"
+        output_files[output_file]=1
+        File.open(output_file, "ab") do |out|
+          # puts "msa: #{id}\tsequences: #{list.length}" if id == "48"
+          if list.size > 1
+            seq = ""
+            list.each do |hash|
+              seq << ">#{hash[:name]}\n"
+              if hash[:strand] == "+"
+                seq << "#{@sequences[hash[:name]]}\n"
+              elsif hash[:strand] == "-"
+                seq << "#{@sequences[hash[:name]].revcomp}\n"
+              else
+                abort "Unknown strand #{hash[:strand]}"
+              end
             end
-          end
-          cmd = "echo -e \"#{seq}\" | #{@clustalo} -i - --outfmt fa "
-          cmd << "--output-order tree-order"
-          align = Cmd.new cmd
-          align.run
-          File.open("cluster#{id}.fa", "wb") do |out|
-            out.write align.stdout
+            # File.open("cluster#{id}.fa", "wb") { |out| out.write seq }
+            output = "cluster#{id}.aln.fa"
+            print "Thread #{Thread.current.object_id} clustalo on cluster #{id}...\n" if @verbose
+            cmd = "echo  \"#{seq}\" | #{@clustalo} -i - -o #{output} "
+            cmd << "--outfmt clu --force "
+            cmd << "--output-order tree-order --infmt fa --wrap 50000"
+            align = Cmd.new cmd
+            align.run
+
+            unless align.status.success?
+              abort align.stderr
+            end
+            consensus = parse_msa(output)
+            out.write ">cluster#{id}\n"
+            out.write "#{consensus}\n"
+            File.delete(output)
+          else
+            out.write ">cluster#{id}\n"
+            out.write "#{@sequences[list[0][:name]]}\n"
           end
         end
       end
+      cmd = "cat "
+      cmd << output_files.join(" ")
+      cmd << " > consensus_output.fa"
+      cat = Cmd.new cmd
+      cat.run
+    end
+
+    def parse_msa(output)
+      msa = {}
+      exons = {}
+      longest = 0
+      File.open(output).each do |line|
+        if line =~ /CLUSTAL/ or line.length < 2 or line=~/^\s+/
+        else
+          if line =~ /(.+)\s+(.+)/
+            name = $1
+            alignment = $2
+            msa[name] = []
+            prev = "-"
+            e = 0
+            alignment.each_char.with_index do |c, index|
+              msa[name][index] = c
+              longest = index if index > longest
+              if prev == "-" and c != "-"
+                e += 1
+              end
+              prev = c
+            end
+            # puts "#{name}\t#{e}"
+            exons[name] = e
+          end
+        end
+      end
+      points=[]
+      column = ""
+      consensus = ""
+      (0..longest).each do |i|
+        column = ""
+        msa.each do |name, list|
+          if exons[name]==1
+            if list[i] != "-"
+              column << list[i]
+            end
+          end
+        end
+        highest=-1
+        best=0
+        bestbase="N"
+        column.split("").uniq.each_with_index do |base, index|
+          if column.count(base) > highest
+            best = index
+            bestbase = base
+          end
+        end
+        if bestbase == "N"
+          puts "output: #{output}"
+          puts "column: #{column}\t#{i}"
+          p exons
+          exit
+        end
+        consensus << bestbase
+
+      end
+      return consensus
     end
 
     def load_scores files
@@ -107,7 +191,7 @@ module Transfuse
       filtered_files = []
       files.each_with_index do |file, index|
         new_filename = "#{File.basename(file, File.extname(file))}_filtered.fa"
-        unless File.exist?(new_filename)
+        if !File.exist?(new_filename) or File.stat(new_filename).size < 1
           File.open(new_filename, "wb") do |out|
             puts "opening #{file}..."
             Bio::FastaFormat.open(file).each do |entry|
