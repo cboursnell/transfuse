@@ -5,16 +5,17 @@ Rake::TestTask.new do |t|
 end
 
 Rake::TestTask.new do |t|
-  t.name = :corset
-  t.libs << 'test'
-  t.test_files = ['test/test_corset.rb']
-end
-
-Rake::TestTask.new do |t|
   t.name = :cluster
   t.libs << 'test'
   t.test_files = ['test/test_cluster.rb']
 end
+
+Rake::TestTask.new do |t|
+  t.name = :fuse
+  t.libs << 'test'
+  t.test_files = ['test/test_transfuse.rb']
+end
+
 
 desc "Run tests"
 task :default => :test

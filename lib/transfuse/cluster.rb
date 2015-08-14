@@ -37,11 +37,12 @@ module Transfuse
     end
 
     def vsearch fasta
-      puts "running vsearch" if @verbose
-      cluster_output = "#{fasta}.clust"
+      print "running vsearch" if @verbose
+      cluster_output = "#{File.basename(fasta)}.clust"
       vsearch_cmd = generate_vsearch_command fasta, cluster_output
       cluster = Cmd.new vsearch_cmd
       cluster.run cluster_output
+      puts " Done. Created #{cluster_output}" if @verbose
       return cluster_output
     end
 

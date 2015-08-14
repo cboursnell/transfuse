@@ -1,6 +1,6 @@
 ## Transfuse
 
-*Transfuse is currently in development and is not yet ready for use*
+**Transfuse is currently in development and is not yet ready for use**
 
 Transfuse intelligently merges your multiple de novo transcriptome assemblies. Run multiple assemblies with different de novo assemblers, or different settings in the same assembler and have them combined into a single high quality transcriptome.
 

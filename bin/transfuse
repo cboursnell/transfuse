@@ -54,6 +54,7 @@ else
   abort msg
 end
 
+# filter out assemblies with low score
 assembly_files = transfuse.filter assembly_files, scores
 
 # concatenate assemblies into one fasta file
@@ -62,10 +63,11 @@ cat = transfuse.concatenate assembly_files
 # load fasta sequences from concatenated file into hash
 transfuse.load_fasta cat
 
-# cluster using vsearch or maybe cd-hit-est
+# cluster using vsearch
 clusters = transfuse.cluster cat
 
-transfuse.sequence_alignment clusters
+transfuse.consensus clusters
+# transfuse.sequence_alignment clusters, scores
 # pull out contigs from each cluster based on the scores
 # best = transfuse.select_contigs clusters, scores
 
