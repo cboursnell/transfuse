@@ -52,11 +52,12 @@ module Transfuse
     end
 
     def load_fasta fasta
-      puts "loading fasta sequence #{fasta}" if @verbose
+      print "loading fasta sequence #{fasta}..." if @verbose
       @sequences = {}
       Bio::FastaFormat.open(fasta).each do |entry|
         @sequences[entry.entry_id] = entry.seq.to_s
       end
+      puts " Done" if @verbose
     end
 
     def cluster file
@@ -65,21 +66,29 @@ module Transfuse
       return cluster.run file
     end
 
-    def consensus clusters
-      # TODO add threach to this function
+    def consensus clusters, output
+      seqs = []
       clusters.each do |id, list|
-        puts "#{id}"
-        con = Consensus.new 31
-        # TODO make this check that the cluster has more than one sequence in
-        #      it before running consensus
-        list.each_with_index do |hash,index|
-          con.add_kmers index, @sequences[hash[:name]]
+        puts "#{id}" if @verbose
+        if list.size > 1
+          con = Consensus.new 31
+          list.each_with_index do |hash,index|
+            con.add_kmers index, @sequences[hash[:name]]
+          end
+          seqs << con.output(id) # TODO make this get output and write to files
+        else
+          list.each do |hash|
+            seq = ">contig#{id}.1\n"
+            seq << "#{@sequences[hash[:name]]}\n"
+            seqs << seq
+          end
         end
-        con.output id # TODO make this get output and write to files
       end
-      # TODO concatenate all the individual fasta sequences
-      #      with one giant 'cat' command?
-      seqs
+      File.open(output, "wb") do |out|
+        seqs.each do |seq|
+          out.write seq
+        end
+      end
     end
 
     def load_scores files
@@ -104,7 +113,7 @@ module Transfuse
         new_filename = "#{File.basename(file, File.extname(file))}_filtered.fa"
         if !File.exist?(new_filename) or File.stat(new_filename).size < 1
           File.open(new_filename, "wb") do |out|
-            puts "opening #{file}..."
+            puts "filtering #{file}..." if @verbose
             Bio::FastaFormat.open(file).each do |entry|
               contig_name = entry.entry_id
               contig_name = "contig#{index}_#{contig_name}"
@@ -137,17 +146,22 @@ module Transfuse
       else
         files.each_with_index do |fasta, index|
           puts "transrate on #{fasta}" if @verbose
-          assembly = Transrate::Assembly.new(fasta)
-          transrater = Transrate::Transrater.new(assembly, nil, threads:@threads)
-          transrater.read_metrics(left.join(','), right.join(','))
-          File.rename("assembly_score_optimisation.csv", "assembly#{index}_score_optimisation.csv")
-          assembly.each do |name, contig|
-            name = "contig#{index}_#{name}"
-            scores[name] = { :score => contig.score,
-                             :p_good => contig.p_good,
-                             :p_bases_covered => contig.p_bases_covered,
-                             :coverage => contig.coverage }
+          dir = "transrate_#{File.basename(fasta, File.extname(fasta))}"
+          Dir.mkdir(dir)
+          Dir.chdir(dir) do
+            assembly = Transrate::Assembly.new(fasta)
+            transrater = Transrate::Transrater.new(assembly, nil, threads:@threads)
+            transrater.read_metrics(left.join(','), right.join(','))
+            File.rename("assembly_score_optimisation.csv",
+                        "assembly#{index}_score_optimisation.csv")
+            assembly.each do |name, contig|
+              name = "contig#{index}_#{name}"
+              scores[name] = { :score => contig.score,
+                               :p_good => contig.p_good,
+                               :p_bases_covered => contig.p_bases_covered,
+                               :coverage => contig.coverage }
 
+            end
           end
         end
         File.open(scores_file, "wb") do |out|

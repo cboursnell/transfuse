@@ -22,13 +22,13 @@ opts = Trollop::options do
   OPTIONS:
 
   EOS
-  opt :assembly, "assembly files in FASTA format, comma-separated",
+  opt :assemblies, "assembly files in FASTA format, comma-separated",
       :type => String, :required => true
-  opt :scores, "transrate contig score output files, comma-separated",
-      :type => String
   opt :left, "left reads file in FASTQ format",
       :type => String
   opt :right, "right reads file in FASTQ format",
+      :type => String
+  opt :scores, "transrate contig score output files, comma-separated. Ignored if reads are provided",
       :type => String
   opt :output, "write merged assembly to file",
       :type => String, :required => :true
@@ -38,7 +38,7 @@ end
 
 transfuse = Transfuse::Transfuse.new opts.threads, opts.verbose
 
-assembly_files = transfuse.check_files opts.assembly
+assembly_files = transfuse.check_files opts.assemblies
 score_files = transfuse.check_files opts.score if opts.score
 left = transfuse.check_files opts.left if opts.left
 right = transfuse.check_files opts.right if opts.right
@@ -66,7 +66,7 @@ transfuse.load_fasta cat
 # cluster using vsearch
 clusters = transfuse.cluster cat
 
-transfuse.consensus clusters
+transfuse.consensus clusters, opts.output
 # transfuse.sequence_alignment clusters, scores
 # pull out contigs from each cluster based on the scores
 # best = transfuse.select_contigs clusters, scores

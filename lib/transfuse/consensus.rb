@@ -60,22 +60,27 @@ module Transfuse
       s1 = kmers1.length
       s2 = kmers2.length
       matrix = initialize_matrix s1, s2
-
+      l = 1
       1.upto(s1) do |x|
+        if 100*x/kmers1.length.to_f > l
+          print "#{l}% "
+          l+=1
+        end
         1.upto(s2) do |y|
           next if x==0 and y==0
 
           # m matrix
           if x > 0 and y > 0
-            if kmers1[x-1] == kmers2[y-1] # match
+            # if kmers1[x-1] == kmers2[y-1] # match
+            if kmer_match(kmers1[x-1], kmers2[y-1])
               score_m, arrow_m = max3(matrix[x-1][y-1][:score_m] + @match,
-                                    matrix[x-1][y-1][:score_x] + @match,
-                                    matrix[x-1][y-1][:score_y] + @match)
+                                      matrix[x-1][y-1][:score_x] + @match,
+                                      matrix[x-1][y-1][:score_y] + @match)
 
             else
               score_m, arrow_m = max3(matrix[x-1][y-1][:score_m] + @mismatch,
-                                    matrix[x-1][y-1][:score_x] + @mismatch,
-                                    matrix[x-1][y-1][:score_y] + @mismatch)
+                                      matrix[x-1][y-1][:score_x] + @mismatch,
+                                      matrix[x-1][y-1][:score_y] + @mismatch)
             end
           end
 
@@ -101,6 +106,7 @@ module Transfuse
                            :arrow_y => arrow_y }
         end # y
       end # x
+      puts "|"
 
       x = s1
       y = s2
@@ -177,66 +183,87 @@ module Transfuse
         if index==alignment2.length-1 and k2=="-"
           b[:end_gap]=1
         end
-        if k1==k2
+        if kmer_match(k1,k2)
           a[:overlaps]+=1
           b[:overlaps]+=1
         end
-
       end
-
-      # p a
-      # p b
 
       type = -1
       if a[:overlaps]==0
         type = 5
       elsif b[:start_gap]==1 and b[:end_gap]==1 and b[:gaps]==2 and b[:exons]==1 and
          a[:exons]==1 and a[:gaps]==0
+        # puts " *** this is a case 1 comparison A"
         type = 1
       elsif a[:start_gap]==1 and a[:end_gap]==1 and a[:gaps]==2 and a[:exons]==1 and
          b[:exons]==1 and b[:gaps]==0
+        # puts " *** this is a case 2 comparison A"
         type = 2
       elsif a[:exons]==1 and a[:gaps]==0 and b[:exons]==1 and b[:gaps]==1 and
             (b[:start_gap]==1 or b[:end_gap]==1)
+        # puts " *** this is a case 1 comparison B"
         type = 1
       elsif b[:exons]==1 and b[:gaps]==0 and a[:exons]==1 and a[:gaps]==1 and
             (a[:start_gap]==1 or a[:end_gap]==1)
+        # puts " *** this is a case 2 comparison B"
         type = 2
       elsif a[:exons]==1 and a[:gaps]==1 and a[:end_gap]==1 and
             b[:exons]==1 and b[:gaps]==1 and b[:start_gap]==1
+        # puts " *** this is a case 3 comparison A"
         type = 3
       elsif a[:exons]==1 and a[:gaps]==1 and a[:start_gap]==1 and
             b[:exons]==1 and b[:gaps]==1 and b[:end_gap]==1
+        # puts " *** this is a case 4 comparison A"
         type = 4
       else
+        # puts " *** this is a case 5 or 6 comparison A"
         type = 5
       end
 
       consensus = ""
+
+      seq1=""
+      seq2=""
       if type < 0
         puts "something went really wrong"
       elsif type <= 4
-        alignment1.reverse.zip(alignment2.reverse).each_with_index do |pair, index|
-          if index==0
-            if pair[0]=="-"
-              consensus << pair[1]
-            elsif pair[1]=="-"
-              consensus << pair[0]
-            else
-              consensus << pair[0]
-            end
-          else
-            if pair[0]=="-"
-              consensus << pair[1][-1]
-            elsif pair[1]=="-"
-              consensus << pair[0][-1]
-            else
-              consensus << pair[0][-1]
-            end
+        first=true
+        alignment1.reverse.each do |kmer|
+          if kmer == "-"
+            seq1 << "-"
+          elsif first
+            seq1 << kmer
+            first = false
+          elsif !first
+            seq1 << kmer[-1]
+          end
+        end
+        first=true
+        alignment2.reverse.each do |kmer|
+          if kmer == "-"
+            seq2 << "-"
+          elsif first
+            seq2 << kmer
+            first = false
+          elsif !first
+            seq2 << kmer[-1]
           end
         end
       end
 
+      seq1.split("").zip(seq2.split("")).each do |pair|
+        if pair[0] != "-" and pair[0] != "N"
+          consensus << pair[0]
+        elsif pair[1] != "-" and pair[1] != "N"
+          consensus << pair[1]
+        elsif pair[0]!="-"
+          consensus << pair[0]
+        elsif pair[1]!="-"
+          consensus << pair[1]
+        end
+      end
+      matrix = {}
       return [type, consensus]
     end
 
@@ -277,6 +304,26 @@ module Transfuse
                       :arrow_x => "E",
                       :arrow_y => "E"}
       return matrix
+    end
+
+    def kmer_match kmer1, kmer2
+      if kmer1==kmer2
+        return true
+      elsif kmer1.count("N")==@kmer or kmer2.count("N")==@kmer
+        return true
+      elsif kmer1=~/N/ or kmer2=~/N/
+        mismatch=false
+        0.upto(@kmer-1) do |i|
+          if kmer1[i]==kmer2[i] or kmer1[i]=="N" or kmer2[i]=="N"
+          else
+            mismatch = true
+          end
+        end
+        return !mismatch
+      else
+        return false
+      end
+
     end
 
     def kmerise id, seq
