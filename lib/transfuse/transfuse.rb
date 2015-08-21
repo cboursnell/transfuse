@@ -19,6 +19,7 @@ module Transfuse
     end
 
     def check_files string
+      puts "check file string: #{string}" if @verbose
       list = []
       string.split(",").each do |file|
         file = File.expand_path(file)
@@ -60,35 +61,15 @@ module Transfuse
       puts " Done" if @verbose
     end
 
-    def cluster file
+    def cluster file, output
       puts "clustering #{file}" if @verbose
       cluster = Cluster.new @threads, @verbose
       return cluster.run file
     end
 
-    def consensus clusters, output
-      seqs = []
-      clusters.each do |id, list|
-        puts "#{id}" if @verbose
-        if list.size > 1
-          con = Consensus.new 31
-          list.each_with_index do |hash,index|
-            con.add_kmers index, @sequences[hash[:name]]
-          end
-          seqs << con.output(id) # TODO make this get output and write to files
-        else
-          list.each do |hash|
-            seq = ">contig#{id}.1\n"
-            seq << "#{@sequences[hash[:name]]}\n"
-            seqs << seq
-          end
-        end
-      end
-      File.open(output, "wb") do |out|
-        seqs.each do |seq|
-          out.write seq
-        end
-      end
+    def consensus msa, output
+      cons = Consensus.new
+      cons.run msa, output
     end
 
     def load_scores files

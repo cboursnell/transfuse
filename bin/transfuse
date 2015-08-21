@@ -64,12 +64,7 @@ cat = transfuse.concatenate assembly_files
 transfuse.load_fasta cat
 
 # cluster using vsearch
-clusters = transfuse.cluster cat
+msa = transfuse.cluster cat, opts.output
 
-transfuse.consensus clusters, opts.output
-# transfuse.sequence_alignment clusters, scores
-# pull out contigs from each cluster based on the scores
-# best = transfuse.select_contigs clusters, scores
-
-# transfuse.output_contigs best, cat, opts.output
+transfuse.consensus msa, opts.output
 

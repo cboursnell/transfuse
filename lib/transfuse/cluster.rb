@@ -21,8 +21,8 @@ module Transfuse
         output = cd_hit fasta
         return parse_output output
       else
-        output = vsearch fasta
-        return parse_vsearch_output output
+        cluster_output, msa_output = vsearch fasta
+        return parse_vsearch_output(cluster_output, msa_output)
       end
     end
 
@@ -39,11 +39,12 @@ module Transfuse
     def vsearch fasta
       print "running vsearch" if @verbose
       cluster_output = "#{File.basename(fasta)}.clust"
-      vsearch_cmd = generate_vsearch_command fasta, cluster_output
+      msa_output = "#{File.basename(fasta)}.aln"
+      vsearch_cmd = generate_vsearch_command fasta, cluster_output, msa_output
       cluster = Cmd.new vsearch_cmd
       cluster.run cluster_output
       puts " Done. Created #{cluster_output}" if @verbose
-      return cluster_output
+      return [cluster_output, msa_output]
     end
 
     def generate_cdhit_command fasta, out
@@ -60,7 +61,7 @@ module Transfuse
       cmd << " -M 8000" # increase memory
     end
 
-    def generate_vsearch_command fasta, out
+    def generate_vsearch_command fasta, out, msa
       vsearch = "#{@vsearch}"
       vsearch << " --cluster_fast #{fasta}"
       vsearch << " --id #{@id}"
@@ -68,6 +69,7 @@ module Transfuse
       vsearch << " --qmask none" # no masking
       vsearch << " --strand both"
       vsearch << " --uc #{out}"
+      vsearch << " --msaout #{msa}"
       vsearch << " --threads #{@threads}"
       return vsearch
     end
@@ -95,8 +97,9 @@ module Transfuse
       return clusters
     end
 
-    def parse_vsearch_output cluster_output
+    def parse_vsearch_output cluster_output, msa_output
       clusters = {}
+      lookup = {}
       second = 0
       File.open(cluster_output).each_line do |line|
         if line.start_with?("S") or line.start_with?("H")
@@ -107,28 +110,28 @@ module Transfuse
           strand = cols[4]
           strand = "+" if strand == "*"
           contig_name = cols[8]
-          if cigar != "*"
-            cigar = cigar.split(/[IDM]/).zip(cigar.scan(/[IDM]/))
-            match = 0
-            deletions = 0
-            cigar.each do |item|
-              if item[1]=="M"
-                match += item[0].to_i
-              end
-              if item[1]=="D"
-                deletions += item[0].to_i
-              end
-            end
-            if match < deletions # this seq is likely to mess up the MSA
-              cluster = "#{cluster}.#{second}"
-              second += 1
-            end
-          end
+
           clusters[cluster] ||= []
           clusters[cluster] << { :name => contig_name, :strand => strand }
+          lookup[contig_name] = cluster
         end
       end
-      return clusters
+      msa = {}
+      Bio::FastaFormat.open(msa_output).each do |entry|
+        name = entry.entry_id
+        if name != "consensus"
+          # name = name[1..-1]
+          if name[0]=="*"
+            name = name[1..-1]
+          end
+          # what cluster is name in?
+          cluster = lookup[name]
+          msa[cluster] ||= []
+          msa[cluster] << entry.seq.seq
+        end
+      end
+
+      return msa
     end
 
   end
