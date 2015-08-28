@@ -33,6 +33,7 @@ opts = Trollop::options do
   opt :output, "write merged assembly to file",
       :type => String, :required => :true
   opt :threads, "number of threads", :type => :int, :default => 1
+  opt :id, "sequence identity to cluster at", :type => :float, :default => 1.0
   opt :verbose, "be verbose"
 end
 
@@ -64,7 +65,9 @@ cat = transfuse.concatenate assembly_files
 transfuse.load_fasta cat
 
 # cluster using vsearch
-msa = transfuse.cluster cat, opts.output
+msa = transfuse.cluster cat, opts.id
 
-transfuse.consensus msa, opts.output
+transfuse.consensus msa, scores, opts.output
 
+# transrate the consensus output to remove low scoring contigs again...
+transfuse.transrate_consensus opts.output, left, right
