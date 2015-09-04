@@ -20,8 +20,8 @@ module Transfuse
 
     def vsearch fasta
       print "running vsearch..." if @verbose
-      cluster_output = "#{File.basename(fasta)}#{@id}.clust"
-      msa_output = "#{File.basename(fasta)}#{@id}.aln"
+      cluster_output = "#{File.basename(fasta)}-#{@id}.clust"
+      msa_output = "#{File.basename(fasta)}-#{@id}.aln"
       vsearch_cmd = generate_vsearch_command fasta, cluster_output, msa_output
       cluster = Cmd.new vsearch_cmd
       cluster.run cluster_output

@@ -19,9 +19,10 @@ module Transfuse
       #   key = cluster id
       #   value = list
       #     list of sequences in cluster aligned with gaps
+      preoutput = "#{File.basename(output, File.extname(output))}_cons.fa"
       count = 0
       File.open("#{output}.data", "w") do |out2|
-        File.open(output, "w") do |out|
+        File.open(preoutput, "w") do |out|
           msa.each do |id, list|
             count+=1
             print "." if count%5_000==0 and @verbose
@@ -96,6 +97,7 @@ module Transfuse
         end # file
       end # file open
       puts " Done" if @verbose
+      return preoutput
     end # def
 
   end

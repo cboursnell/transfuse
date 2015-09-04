@@ -72,7 +72,7 @@ module Transfuse
 
     def consensus msa, scores, output
       cons = Consensus.new(@verbose)
-      cons.run(msa, scores, output)
+      return cons.run(msa, scores, output)
     end
 
     def load_scores files
@@ -117,7 +117,8 @@ module Transfuse
       return filtered_files
     end
 
-    def transrate_consensus file, left, right
+    def transrate_consensus file, output, left, right
+      output = File.expand_path(output)
       puts "transrate on #{file}" if @verbose
       file = File.expand_path(file)
       name = File.basename(file, File.extname(file))
@@ -147,7 +148,7 @@ module Transfuse
           end
         end
         puts "  writing filtered fasta file" if @verbose
-        File.open("../#{name}_filter.fa", "wb") do |out|
+        File.open(output, "wb") do |out|
           assembly.each do |name, contig|
             if contig.score.to_f > 0.01 and contig.coverage.to_f >= 1
               out.write ">#{name}\n"

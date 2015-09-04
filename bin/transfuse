@@ -67,7 +67,8 @@ transfuse.load_fasta cat
 # cluster using vsearch
 msa = transfuse.cluster cat, opts.id
 
-transfuse.consensus msa, scores, opts.output
+# read the msa from vsearch and produce a consensus fasta
+cons = transfuse.consensus msa, scores, opts.output
 
-# transrate the consensus output to remove low scoring contigs again...
-transfuse.transrate_consensus opts.output, left, right
+# transrate the consensus output to remove low scoring contigs
+transfuse.transrate_consensus cons, opts.output, left, right
