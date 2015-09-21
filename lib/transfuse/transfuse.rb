@@ -204,6 +204,10 @@ module Transfuse
                                :coverage => contig.coverage.to_f }
 
             end
+            File.open("summary.txt","w") do |out|
+              out.write "fasta\tscore\toptimal\n"
+              out.write "#{fasta}\t#{transrater.assembly_score}\t#{transrater.assembly_optimal_score("prefix")}\n"
+            end
           end
         end
         File.open(scores_file, "wb") do |out|
