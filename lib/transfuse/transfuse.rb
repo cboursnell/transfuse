@@ -205,8 +205,8 @@ module Transfuse
 
             end
             File.open("summary.txt","w") do |out|
-              out.write "fasta\tscore\toptimal\n"
-              out.write "#{fasta}\t#{transrater.assembly_score}\t#{transrater.assembly_optimal_score("prefix")}\n"
+              out.write "fasta\tscore\toptimal\tcutoff\n"
+              out.write "#{fasta}\t#{transrater.assembly_score}\t#{transrater.assembly_optimal_score("prefix").join("\t")}\n"
             end
           end
         end
