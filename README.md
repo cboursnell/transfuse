@@ -18,19 +18,24 @@ then build and install the ruby gem
 
 `gem build *spec; gem install *gem`
 
+Transfuse also requires `vsearch` to be installed which can be downloaded from:
+
+`https://github.com/torognes/vsearch`
+
 ### Usage
 
 Transfuse is run on the command line. The options are:
 
 ```
-  -a, --assembly=<s>    assembly files in FASTA format, comma-separated
-  -l, --left=<s>        left reads file in FASTQ format
-  -r, --right=<s>       right reads file in FASTQ format
-  -o, --output=<s>      write merged assembly to file
-  -t, --threads=<i>     number of threads (default: 1)
-  -v, --verbose         be verbose
-  -e, --version         Print version and exit
-  -h, --help            Show this message
+  -a, --assemblies=<s>    assembly files in FASTA format, comma-separated
+  -l, --left=<s>          left reads file in FASTQ format
+  -r, --right=<s>         right reads file in FASTQ format
+  -o, --output=<s>        write merged assembly to file
+  -t, --threads=<i>       number of threads (default: 1)
+  -i, --id=<f>            sequence identity to cluster at (default: 1.0)
+  -v, --verbose           be verbose
+  -e, --version           Print version and exit
+  -h, --help              Show this message
 ```
 
 An example command:
