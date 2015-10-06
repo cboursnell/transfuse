@@ -1,5 +1,7 @@
 ## Transfuse
 
+[![Join the chat at https://gitter.im/cboursnell/transfuse](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/cboursnell/transfuse?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Transfuse intelligently merges your multiple de novo transcriptome assemblies. Run multiple assemblies with different de novo assemblers, or different settings in the same assembler and have them combined into a single high quality transcriptome.
 
 Transfuse takes in the reads you used to do the assembly and a list of fasta files and produces a single output fasta file.
