@@ -23,26 +23,41 @@ opts = Trollop::options do
 
   EOS
   opt :assemblies, "assembly files in FASTA format, comma-separated",
-      :type => String, :required => true
+      :type => String
   opt :left, "left reads file in FASTQ format",
       :type => String
   opt :right, "right reads file in FASTQ format",
       :type => String
-  opt :scores, "transrate contig score output files, comma-separated. Ignored if reads are provided",
-      :type => String
-  opt :output, "write merged assembly to file",
-      :type => String, :required => :true
+  opt :output, "write merged assembly to file", :type => String
   opt :threads, "number of threads", :type => :int, :default => 1
   opt :id, "sequence identity to cluster at", :type => :float, :default => 1.0
+  # opt :install, "install dependencies"
   opt :verbose, "be verbose"
 end
 
 transfuse = Transfuse::Transfuse.new opts.threads, opts.verbose
 
-assembly_files = transfuse.check_files opts.assemblies
-score_files = transfuse.check_files opts.score if opts.score
-left = transfuse.check_files opts.left if opts.left
-right = transfuse.check_files opts.right if opts.right
+# if opts.install
+#   transfuse.install_dependencies
+# else
+#   missing = transfuse.check_dependencies
+#   unless missing.empty?
+#     list = missing.collect {|i| "#{i.name}:#{i.version}"}.join("\n - ")
+#     msg = "Not installed: \n - #{list}"
+#     abort msg
+#   end
+# end
+
+assembly_files = transfuse.check_files(opts.assemblies, "assemblies")
+left = transfuse.check_files(opts.left, "left")
+right = transfuse.check_files(opts.right, "right")
+if opts.output
+  if File.exist?(opts.output)
+    abort "Output #{opts.output} already exists"
+  end
+else
+  abort "Please specify an output with the --output option"
+end
 
 if opts.scores
 # load the scores from the comma separated list of files

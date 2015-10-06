@@ -1,0 +1,11 @@
+vsearch:
+  binaries:
+    - vsearch
+  version:
+    number: '1.1.3'
+    command: 'vsearch --version'
+  url:
+    64bit:
+      linux: https://github.com/torognes/vsearch/releases/download/v1.1.3/vsearch-1.1.3-linux-x86_64
+      macosx: https://github.com/torognes/vsearch/releases/download/v1.1.3/vsearch-1.1.3-osx-x86_64
+  unpack: false

@@ -18,8 +18,29 @@ module Transfuse
       @verbose = verbose
     end
 
-    def check_files string
+    def check_dependencies
+      # Check dependencies if they are relevant to the command issued,
+      # and handle any commands to install missing ones
+      gem_dir = Gem.loaded_specs['transfuse'].full_gem_path
+      gem_deps = File.join(gem_dir, 'deps', 'deps.yaml')
+
+      return Bindeps.missing gem_deps
+
+    end # check_dependencies
+
+    def install_dependencies
+      # Check dependencies if they are relevant to the command issued,
+      # and handle any commands to install missing ones
+      gem_dir = Gem.loaded_specs['transfuse'].full_gem_path
+      gem_deps = File.join(gem_dir, 'deps', 'deps.yaml')
+
+      Bindeps.require gem_deps
+
+    end # check_dependencies
+
+    def check_files string, option
       # puts "check file string: #{string}" if @verbose
+      abort "Please specify --#{option} option" if string.nil?
       list = []
       string.split(",").each do |file|
         file = File.expand_path(file)
