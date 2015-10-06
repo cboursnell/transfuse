@@ -18,7 +18,7 @@ class TestTransfuse < Test::Unit::TestCase
       list = []
       list << File.join(File.dirname(__FILE__), 'data', 'assembly1.fasta')
       list << File.join(File.dirname(__FILE__), 'data', 'assembly2.fasta')
-      files = @fuser.check_files list.join(",")
+      files = @fuser.check_files(list.join(","), "option")
       assert_equal 2, files.length, "length"
     end
 
@@ -41,7 +41,7 @@ class TestTransfuse < Test::Unit::TestCase
       tmpdir = Dir.mktmpdir
         Dir.chdir(tmpdir) do
           file = File.join(File.dirname(__FILE__), 'data', 'assembly1.fasta')
-          hash = @fuser.cluster file
+          hash = @fuser.cluster(file, 1.0)
           assert_equal 250, hash.size, "output size"
         end
       # end
