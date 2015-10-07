@@ -5,7 +5,7 @@ Gem::Specification.new do |gem|
   gem.name        = 'transfuse'
   gem.version     = Transfuse::VERSION::STRING.dup
   gem.date        = '2015-05-22'
-  gem.summary     = "Merge assemblies"
+  gem.summary     = "Merge multiple transcriptome assemblies"
   gem.description = "See summary"
   gem.authors     = ["Richard Smith-Unna", "Chris Boursnell"]
   gem.email       = ['rds45@cam.ac.uk', 'cmb211@cam.ac.uk']
@@ -15,12 +15,11 @@ Gem::Specification.new do |gem|
   gem.homepage    = 'https://github.com/cboursnell/transfuse'
   gem.license     = 'MIT'
 
+  gem.add_dependency 'transrate', '~> 1.0', '>= 1.0.1'
   gem.add_dependency 'trollop', '~> 2.1', '>= 2.1.2'
   gem.add_dependency 'bio', '~> 1.5', '>= 1.5.0'
   gem.add_dependency 'fixwhich', '~> 1.0', '>= 1.0.2'
   gem.add_dependency 'bindeps', '~> 1.2', '>= 1.2.0'
-  gem.add_dependency 'transrate', '~> 1.0', '>= 1.0.1'
-  gem.add_dependency 'bundler', '~> 1.10', '>= 1.10.6'
 
   gem.add_development_dependency 'rake', '~> 10.4', '>= 10.4.2'
   gem.add_development_dependency 'turn', '~> 0.9', '>= 0.9.7'
