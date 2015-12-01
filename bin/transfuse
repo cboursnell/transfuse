@@ -31,22 +31,22 @@ opts = Trollop::options do
   opt :output, "write merged assembly to file", :type => String
   opt :threads, "number of threads", :type => :int, :default => 1
   opt :id, "sequence identity to cluster at", :type => :float, :default => 1.0
-  # opt :install, "install dependencies"
+  opt :install, "install dependencies"
   opt :verbose, "be verbose"
 end
 
 transfuse = Transfuse::Transfuse.new opts.threads, opts.verbose
 
-# if opts.install
-#   transfuse.install_dependencies
-# else
-#   missing = transfuse.check_dependencies
-#   unless missing.empty?
-#     list = missing.collect {|i| "#{i.name}:#{i.version}"}.join("\n - ")
-#     msg = "Not installed: \n - #{list}"
-#     abort msg
-#   end
-# end
+if opts.install
+  transfuse.install_dependencies
+  abort "Everything installed"
+end
+missing = transfuse.check_dependencies
+unless missing.empty?
+  list = missing.collect {|i| "#{i.name}:#{i.version}"}.join("\n - ")
+  msg = "Not installed: \n - #{list}"
+  abort msg
+end
 
 assembly_files = transfuse.check_files(opts.assemblies, "assemblies")
 left = transfuse.check_files(opts.left, "left")

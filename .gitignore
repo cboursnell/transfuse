@@ -1,3 +1,36 @@
+
+*.gem
+*.rbc
+*.so
+.bundle
+.config
+coverage
+test_data
+InstalledFiles
+lib/bundler/man
+pkg
+rdoc
+spec/reports
+test/tmp
+test/version_tmp
+tmp
+*~
+.#*
+\#*
+*so
+
 # directories
 
 coverage
+
+# vagrant stuff
+.vagrant
+
+# packaging stuff
+*.tar.gz
+packaging/bindeps
+packaging/vendor
+packaging/packaging
+traveling-ruby*
+*box
+

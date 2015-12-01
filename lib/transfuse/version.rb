@@ -7,8 +7,8 @@ module Transfuse
   # Semantic Versioning 2.0 (http://semver.org/).
   module VERSION
     MAJOR = 0
-    MINOR = 4
-    PATCH = 6
+    MINOR = 5
+    PATCH = 0
     BUILD = nil
 
     STRING = [MAJOR, MINOR, PATCH, BUILD].compact.join('.')

@@ -4,12 +4,12 @@ require File.expand_path('../lib/transfuse/version', __FILE__)
 Gem::Specification.new do |gem|
   gem.name        = 'transfuse'
   gem.version     = Transfuse::VERSION::STRING.dup
-  gem.date        = '2015-05-22'
+  gem.date        = '2015-12-01'
   gem.summary     = "Merge multiple transcriptome assemblies"
   gem.description = "See summary"
-  gem.authors     = ["Richard Smith-Unna", "Chris Boursnell"]
-  gem.email       = ['rds45@cam.ac.uk', 'cmb211@cam.ac.uk']
-  gem.files       = `git ls-files`.split("\n")
+  gem.authors     = ["Chris Boursnell", "Richard Smith-Unna"]
+  gem.email       = ['cmb211@cam.ac.uk', 'rds45@cam.ac.uk']
+  gem.files       = File.readlines('files.txt').map { |f| f.chomp }
   gem.executables = ["transfuse"]
   gem.require_paths = %w( lib )
   gem.homepage    = 'https://github.com/cboursnell/transfuse'

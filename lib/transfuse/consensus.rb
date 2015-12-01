@@ -86,7 +86,6 @@ module Transfuse
               out.write "#{s[1]}\n"
             end
 
-
           end # msa.each
         end # file
       end # file open
