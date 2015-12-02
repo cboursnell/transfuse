@@ -4,6 +4,7 @@ README.md
 Rakefile
 bin/transfuse
 deps/deps.yaml
+files.txt
 lib/transfuse.rb
 lib/transfuse/cluster.rb
 lib/transfuse/cmd.rb
@@ -11,11 +12,17 @@ lib/transfuse/consensus.rb
 lib/transfuse/transfuse.rb
 lib/transfuse/version.rb
 notes.md
+packaging/build_deps_linux.sh
+packaging/build_deps_macosx.sh
+packaging/bundler-config
+packaging/minify.sh
+packaging/transfuse
 test/data/assembly1.fasta
 test/data/assembly2.fasta
 test/data/contig_scores1.csv
 test/helper.rb
 test/test_cluster.rb
 test/test_transfuse.rb
+test/vagrant/linux-x86_64/Vagrantfile
+test/vagrant/linux-x86_64/provision.sh
 transfuse.gemspec
-files.txt
