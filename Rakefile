@@ -62,7 +62,7 @@ namespace :package do
       abort "You can only 'bundle install' using Ruby 2.2, because that's what Traveling Ruby uses."
     end
     Bundler.with_clean_env do
-      sh "env BUNDLE_IGNORE_CONFIG=1 bundle install --path packaging/vendor --without development"
+      sh "env BUNDLE_IGNORE_CONFIG=1 bundle install --path packaging/vendor"
     end
     sh "rm -f packaging/vendor/*/*/cache/*"
   end
@@ -81,30 +81,32 @@ def create_package(target)
   sh "cp files.txt #{package_dir}/lib/" # deps
   sh "cp Gemfile* #{package_dir}/lib/" # Gemfiles
   sh "cp *gemspec #{package_dir}/lib/" # gemspec
-  
+
   # download travelling ruby
   sh "mkdir #{package_dir}/lib/ruby"
   sh "tar -xzf packaging/packaging/traveling-ruby-#{TRAVELING_RUBY_VERSION}-#{target}.tar.gz -C #{package_dir}/lib/ruby"
   sh "cp packaging/transfuse #{package_dir}/transfuse"
-  sh "cp -pR packaging/vendor #{package_dir}/lib/"
-  sh "cp Gemfile Gemfile.lock #{package_dir}/lib/vendor/"
+  sh "cp -pR packaging/vendor/* #{package_dir}/lib/"
+  sh "cp Gemfile Gemfile.lock #{package_dir}/lib/"
 
   # install binary dependencies
   sh "mkdir -p #{package_dir}/bin"
-  sh "mkdir -p #{package_dir}/lib" 
+  sh "mkdir -p #{package_dir}/lib"
   sh "wget -nc https://github.com/Blahah/snap/releases/download/v1.0beta.18/snap_v1.0beta.18_linux.tar.gz"
   sh "wget -nc https://github.com/Blahah/transrate-tools/releases/download/v1.0.0/bam-read_v1.0.0_linux.tar.gz"
   sh "wget -nc https://github.com/COMBINE-lab/salmon/releases/download/v0.4.2/SalmonBeta-0.4.2_DebianSqueeze.tar.gz"
-  sh "wget -nc https://github.com/torognes/vsearch/releases/download/v1.8.1/vsearch-1.8.1-linux-x86_64.tar.gz"
+  sh "wget -nc https://github.com/torognes/vsearch/releases/download/v1.9.5/vsearch-1.9.5-linux-x86_64.tar.gz"
   sh "find . -maxdepth 1 -name '*.tar.gz' -exec tar xzf '{}' \\;" # unpack
   sh "cp snap-aligner #{package_dir}/bin/."
   sh "cp bam-read #{package_dir}/bin/."
   sh "cp SalmonBeta-0.4.2_DebianSqueeze/bin/salmon #{package_dir}/bin/."
   sh "cp -r SalmonBeta-0.4.2_DebianSqueeze/lib/* #{package_dir}/lib/."
-  sh "cp vsearch-1.8.1-linux-x86_64/bin/vsearch #{package_dir}/bin/."
+  sh "cp vsearch-1.9.5-linux-x86_64/bin/vsearch #{package_dir}/bin/."
 
-  sh "mkdir #{package_dir}/lib/vendor/.bundle"
-  sh "cp packaging/bundler-config #{package_dir}/lib/vendor/.bundle/config"
+  sh "cp packaging/libruby.* #{package_dir}/lib/."
+
+  sh "mkdir #{package_dir}/lib/.bundle"
+  sh "cp packaging/bundler-config #{package_dir}/lib/.bundle/config"
   # create package
   if !ENV['DIR_ONLY']
     sh "cd packaging && tar -czf #{package_pref}.tar.gz #{package_pref}"

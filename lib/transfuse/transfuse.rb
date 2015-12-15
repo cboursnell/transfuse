@@ -191,10 +191,20 @@ module Transfuse
     end
 
     def transrate files, left, right
+      unless left.is_a?(Array)
+        left = [left]
+      end
+      unless right.is_a?(Array)
+        right = [right]
+      end
       scores = {}
       shortname = ""
       files.each do |n|
-        shortname << File.basename(n, File.extname(n))[0..4]
+        a = File.basename(n).split("_").first
+        if a.length > 5
+          a = a[0..4]
+        end
+        # shortname << File.basename(n, File.extname(n))[0..4]
       end
       scores_file = "#{shortname}_scores.csv"
       if File.exist?(scores_file)
