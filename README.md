@@ -45,7 +45,7 @@ Transfuse is run on the command line. The options are:
 An example command:
 
 ```
-transfuse --assembly soap-k31.fa,soap-k41.fa,soap-k51.fa --left reads_1.fq --right reads_2.fq --output soap-merged.fa --threads 12
+transfuse --assemblies soap-k31.fa,soap-k41.fa,soap-k51.fa --left reads_1.fq --right reads_2.fq --output soap-merged.fa --threads 12
 ```
 
 ### Contributing
