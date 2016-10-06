@@ -6,25 +6,7 @@ Transfuse takes in the reads you used to perform your transcriptome assembly and
 
 ### Installation and Running
 
-To install Transfuse you can get it from rubygems.com
-
-`gem install transfuse`
-
-or you can clone this repo:
-
-`git clone https://github.com/cboursnell/transfuse.git`
-
-then build and install the ruby gem
-
-`gem build *spec; gem install *gem`
-
-Transfuse uses [transrate](https://github.com/blahah/transrate "Transrate Github"). To install the 3rd party binaries required by transrate run
-
-`transrate --install-deps read`
-
-Transfuse also requires `vsearch` to be installed which can be downloaded from:
-
-`https://github.com/torognes/vsearch`
+Download the latest release and unpack it. This package contains everything that transfuse needs including a version of ruby. 
 
 ### Usage
 
